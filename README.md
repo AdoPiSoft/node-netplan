@@ -1,32 +1,25 @@
 # set-ip-address
 Node module for setting up network interface(s) ip address, dns, and default routes of physical network interfaces, VLAN, and bridged interfaces.
-
-[![Build Status](https://travis-ci.com/adonespitogo/node-set-ip-address.svg?branch=master)](https://travis-ci.com/adonespitogo/node-set-ip-address)
-
-Supported linux network configurations:
- - dhcpcd (/etc/dhcpcd.conf)
- - ifdownup (/etc/network/interfaces)
- - netplan (/etc/netplan/)
  
 Install
 ---
 
 ```
-yarn add set-ip-address
+yarn add @adopisoft/netplan
 ```
 
 OR
 
 
 ```
-npm i --save set-ip-address
+npm i --save @adopisoft/netplan
 ```
 
 Basic Usage
 ---
 
 ```js
-var set_ip_address = require('set-ip-address')
+var set_ip_address = require('@adopisoft/netplan')
 ```
 
 ```js
