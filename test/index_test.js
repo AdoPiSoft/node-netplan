@@ -166,15 +166,10 @@ describe('index.js', () => {
 
       var p = lib.restartService()
 
-      for (var i in [0, 1, 2]) {
-        exec_cbs[i](i === 0 ? error : null)
-        await Promise.resolve()
-        await Promise.resolve()
-        await Promise.resolve()
-      }
-      expect(cmds[0]).to.equal('service networking restart')
-      expect(cmds[1]).to.equal('netplan try')
-      expect(cmds[2]).to.equal('netplan apply')
+      exec_cbs[0](null)
+      await Promise.resolve()
+
+      expect(cmds[0]).to.equal('netplan apply')
 
       return p
     })
