@@ -1,4 +1,5 @@
-# set-ip-address
+# @adopisoft/netplan
+
 Node module for setting up network interface(s) ip address, dns, and default routes of physical network interfaces, VLAN, and bridged interfaces.
  
 Install
