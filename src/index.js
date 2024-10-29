@@ -7,6 +7,10 @@ var { promisify } = require('util')
 exports.NetworkManagerBackend = 'NetworkManager'
 exports.SystemdNetworkdBackend = 'networkd'
 
+exports.setBackend = (backend) => {
+  netplan.cfg_stack.network.renderer = backend
+}
+
 exports.configure = async (configs) => {
   if (typeof configs == 'object' && !Array.isArray(configs))
     configs = [configs]
