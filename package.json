@@ -4,8 +4,7 @@
   "description": "Node module for setting up network interface(s) ip address.",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --recursive",
-    "publish": "npm publish --access public"
+    "test": "mocha --recursive"
   },
   "repository": {
     "type": "git",
