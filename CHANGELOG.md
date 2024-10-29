@@ -1,3 +1,11 @@
+v1.2.6
+---
+  - Can set backend renderer to NetworkManager or networkd
+
+v1.2.5
+---
+  - Updated readme
+
 v1.2.4
 ---
   - Write to `/etc/udev/rules.d/70-persistent-net.rules` to keep interface names persistent

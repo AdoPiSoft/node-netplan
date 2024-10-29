@@ -7,6 +7,10 @@ var { promisify } = require('util')
 exports.NetworkManagerBackend = 'NetworkManager'
 exports.SystemdNetworkdBackend = 'networkd'
 
+exports.setBackend = (backend) => {
+  netplan.cfg_stack.network.renderer = backend
+}
+
 exports.configure = async (configs) => {
   if (typeof configs == 'object' && !Array.isArray(configs))
     configs = [configs]
@@ -66,15 +70,7 @@ exports.restartService = async () => {
   var error = null
   var network_service_restarted = false
 
-  await execPromise('service networking restart')
-    .then(() => network_service_restarted = true)
-    .catch(e => {
-      console.log(e)
-      error = e
-    })
-
-  await execPromise('netplan try')
-    .then(() => execPromise('netplan apply'))
+  await execPromise('netplan apply')
     .then(() => network_service_restarted = true)
     .catch(e => {
       console.log(e)
