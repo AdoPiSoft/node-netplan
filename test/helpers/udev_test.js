@@ -24,7 +24,7 @@ describe("../src/udev.js", () => {
     }
 
     udev = proxyquire('../../src/helpers/udev.js', {
-      'fs/promises': fs
+      'fs': { promises: fs }
     })
 
   })
