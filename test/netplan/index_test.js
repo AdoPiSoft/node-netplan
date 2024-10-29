@@ -13,14 +13,16 @@ describe('netplan', () => {
     dump_ouput,
     fs,
     filename,
-    ensureDir
+    ensureDir,
+    udev
 
   beforeEach(() => {
     ensureDir = sinon.fake.resolves()
     cfg_yaml = 'some config'
     dump_ouput = 'some yaml output'
-    yaml = {safeDump: sinon.fake(() => dump_ouput)}
-    config = {generate: sinon.fake.returns(cfg_yaml)}
+    yaml = { safeDump: sinon.fake(() => dump_ouput) }
+    config = { generate: sinon.fake.returns(cfg_yaml) }
+    udev = { writeNetworkRules: sinon.fake.resolves() }
     filename = 'some file'
     fs = {
       readdir: sinon.fake((dir, cb) => cb(null, [filename])),
@@ -32,7 +34,8 @@ describe('netplan', () => {
       fs,
       'make-dir': ensureDir,
       'js-yaml': yaml,
-      './config': config
+      './config': config,
+      '../helpers/udev': udev
     })
   })
 
@@ -82,26 +85,40 @@ describe('netplan', () => {
       netplan.getYamlFileName.restore()
     })
 
-    it('should write config to /etc/netplan', async () => {
+    it('should write netplan config and udev rules', async () => {
+
+      netplan.cfg_stack.network.ethernets = {
+        eth0: {
+          dhcp: true,
+          mac_address: '00:00:00:00:00:00'
+        }
+      }
+
       await netplan.writeConfig()
       sinon.assert.calledWithExactly(ensureDir, '/etc/netplan')
-      sinon.assert.calledWithExactly(yaml.safeDump, netplan.cfg_stack, {noCompatMode: true})
+      sinon.assert.calledWithExactly(yaml.safeDump, netplan.cfg_stack, { noCompatMode: true })
       expect(fs.writeFile.lastCall.args[0]).to.equal('/etc/netplan/' + filename)
       expect(fs.writeFile.lastCall.args[1]).to.equal(dump_ouput)
+      sinon.assert.calledOnceWithExactly(udev.writeNetworkRules, [{
+        name: 'eth0',
+        mac: '00:00:00:00:00:00'
+      }])
     })
 
   })
 
   describe('configure()', () => {
-    var set_interface_stub, write_stub
+    var set_interface_stub, write_stub, write_rules_stub
     beforeEach(() => {
       set_interface_stub = sinon.stub(netplan, 'setInterface').returns()
       write_stub = sinon.stub(netplan, 'writeConfig').resolves()
     })
+
     afterEach(() => {
       set_interface_stub.restore()
       write_stub.restore()
     })
+
     it('should accept array arg', async () => {
       netplan.cfg_stack = {
         network: {
@@ -109,8 +126,8 @@ describe('netplan', () => {
           vlans: ['some vlans']
         }
       }
-      var eth0 = {interface: 'eth0', ip_address: '10.0.0.1'}
-      var eth1 = {interface: 'eth1', ip_address: '10.0.0.1'}
+      var eth0 = { interface: 'eth0', ip_address: '10.0.0.1', mac_address: 'xxx' }
+      var eth1 = { interface: 'eth1', ip_address: '10.0.0.1' }
       var configs = [eth0, eth1]
       await netplan.configure(configs)
       expect(set_interface_stub.firstCall.args).to.eql([eth0])

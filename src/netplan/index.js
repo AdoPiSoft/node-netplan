@@ -3,6 +3,7 @@
 var fs = require('fs')
 var yaml = require('js-yaml')
 var config = require('./config.js')
+var udev = require('../helpers/udev.js')
 var util = require('util')
 var readdir = util.promisify(fs.readdir)
 var writeFile = util.promisify(fs.writeFile)
@@ -26,10 +27,25 @@ exports.setInterface = (cfg) => {
 }
 
 exports.writeConfig = async () => {
-  var cfg_yaml = yaml.safeDump(exports.cfg_stack, {noCompatMode: true})
+  var cfg_yaml = yaml.safeDump(exports.cfg_stack, { noCompatMode: true })
   var filename = await exports.getYamlFileName()
   await ensureDir('/etc/netplan')
-  return writeFile(filename, cfg_yaml)
+
+  await writeFile(filename, cfg_yaml)
+
+  var udev_rules = []
+  // loop ethernets and generate udev rules
+  for (var eth in exports.cfg_stack.network.ethernets) {
+    var cfg = exports.cfg_stack.network.ethernets[eth]
+    if (cfg.mac_address) {
+      udev_rules.push({
+        name: eth,
+        mac: cfg.mac_address
+      })
+    }
+  }
+
+  await udev.writeNetworkRules(udev_rules)
 }
 
 exports.configure = (configs) => {

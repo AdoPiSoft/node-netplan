@@ -29,6 +29,7 @@ describe('netplan', () => {
     var config = {
       interface: 'eth0',
       ip_address: '10.0.0.1 ',
+      mac_address: 'xx:xx:xx:xx:xx:xx',
       prefix: 20,
       nameservers: ['10.0.0.1'],
       optional: true
@@ -38,6 +39,9 @@ describe('netplan', () => {
         dhcp4: false,
         dhcp6: false,
         addresses: ['10.0.0.1/20'],
+        match: {
+          macaddress: 'xx:xx:xx:xx:xx:xx'
+        },
         nameservers: {
           addresses: config.nameservers
         },
@@ -164,18 +168,20 @@ describe('netplan', () => {
     expect(templates.generate(defaults, eth1_config).network.ethernets).to.eql(expected_ethernets)
   })
 
-  it('it should set interface to dynmic ip', () => {
+  it('it should set interface to dynamic ip', () => {
     var config = {
       interface: 'eth1',
       dhcp: true,
+      mac_address: 'xxx',
       optional: true
     }
 
     var expected_ethernets = {
       eth1: {
+        optional: true,
         dhcp4: true,
         'dhcp-identifier': 'mac',
-        optional: true
+        match: { macaddress: 'xxx' }
       }
     }
     expect(templates.generate(defaults, config).network.ethernets).to.eql(expected_ethernets)

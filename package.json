@@ -1,10 +1,11 @@
 {
-  "name": "set-ip-address",
-  "version": "1.2.3",
+  "name": "@adopisoft/netplan",
+  "version": "1.2.4",
   "description": "Node module for setting up network interface(s) ip address.",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --recursive"
+    "test": "mocha --recursive",
+    "publish": "npm publish --access public"
   },
   "repository": {
     "type": "git",

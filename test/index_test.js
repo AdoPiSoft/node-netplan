@@ -5,23 +5,16 @@ var proxyquire = require('proxyquire')
 var { expect } = require('chai')
 
 describe('index.js', () => {
-
   var set_ip_address,
-    dhcpcd,
-    interfaces_d,
     netplan,
     child_process
 
   beforeEach(() => {
 
-    dhcpcd = {configure: sinon.fake.resolves()}
-    interfaces_d = {configure: sinon.fake.resolves()}
     netplan = {configure: sinon.fake.resolves()}
     child_process = {}
 
     set_ip_address = proxyquire('../src/index.js', {
-      './dhcpcd/index.js': dhcpcd,
-      './interfaces.d/index.js': interfaces_d,
       './netplan/index.js': netplan,
       'child_process' : child_process
     })
@@ -32,6 +25,8 @@ describe('index.js', () => {
       var index_src = require('../src/index.js')
       var index = require('../index.js')
       expect(index_src).to.eql(index)
+      expect(index.NetworkManagerBackend).to.eql('NetworkManager')
+      expect(index.SystemdNetworkdBackend).to.eql('networkd')
     })
   })
 
@@ -64,19 +59,14 @@ describe('index.js', () => {
         {interface: 'br0', bridge_ports: ['eth0']},
       ]
       await set_ip_address.configure(configs)
-      sinon.assert.calledWithExactly(dhcpcd.configure, expected_configs)
-      sinon.assert.calledWithExactly(interfaces_d.configure, expected_configs)
       sinon.assert.calledWithExactly(netplan.configure, expected_configs)
       expected_configs.forEach((c, i) => {
-        expect(dhcpcd.configure.firstCall.args[0][i]).to.eql(expected_configs[i])
-        expect(interfaces_d.configure.firstCall.args[0][i]).to.eql(expected_configs[i])
         expect(netplan.configure.firstCall.args[0][i]).to.eql(expected_configs[i])
       })
       sinon.assert.notCalled(restart_stub)
-      sinon.assert.callOrder(dhcpcd.configure, interfaces_d.configure, netplan.configure)
     })
 
-    it('should reject if one interface contains same vlan id', async () => {
+    it('should reject if one interface contains conflicting vlan id', async () => {
       var configs = [
         {interface: 'eth0'},
         {interface: 'eth0', vlanid: 10, ifname: 'eth0.1'},
@@ -88,8 +78,6 @@ describe('index.js', () => {
         expect.fail()
       } catch(e) {
         expect(e.message).to.equal("Can't have same VLAN ID on interface eth0")
-        sinon.assert.notCalled(dhcpcd.configure)
-        sinon.assert.notCalled(interfaces_d.configure)
         sinon.assert.notCalled(netplan.configure)
         sinon.assert.notCalled(restart_stub)
       }
@@ -141,38 +129,20 @@ describe('index.js', () => {
         {interface: 'enx00e04c534458', ifname: '00e04c534458.10', vlanid: 10, dhcp: true},
       ]
       await set_ip_address.configure(configs)
-      sinon.assert.calledWithExactly(dhcpcd.configure, expected_configs)
-      sinon.assert.calledWithExactly(interfaces_d.configure, expected_configs)
       sinon.assert.calledWithExactly(netplan.configure, expected_configs)
-    })
-
-    it('should call .configure for all modules for all (dhcpcd, interfaces.d and netplan)', async () => {
-      var eth0 = {interface: 'eth0', ip_address: '10.0.0.1'}
-      var eth1 = {interface: 'eth1', ip_address: '10.0.0.1'}
-      var configs = [eth0, eth1]
-      await set_ip_address.configure(configs)
-      sinon.assert.calledWithExactly(dhcpcd.configure, configs)
-      sinon.assert.calledWithExactly(interfaces_d.configure, configs)
-      sinon.assert.calledWithExactly(netplan.configure, configs)
-      sinon.assert.callOrder(dhcpcd.configure, interfaces_d.configure, netplan.configure)
-      sinon.assert.notCalled(restart_stub)
     })
 
     it('should accept single config object', async () => {
       var eth0 = {interface: 'eth0', ip_address: '10.0.0.1'}
       var configs = [eth0]
       await set_ip_address.configure(eth0)
-      sinon.assert.calledWithExactly(dhcpcd.configure, configs)
-      sinon.assert.calledWithExactly(interfaces_d.configure, configs)
       sinon.assert.calledWithExactly(netplan.configure, configs)
-      sinon.assert.callOrder(dhcpcd.configure, interfaces_d.configure, netplan.configure)
       sinon.assert.notCalled(restart_stub)
     })
 
   })
 
   describe('restartService()', () => {
-
     it('should resolve if one service is ok', async () => {
       var error = 'some error'
       var cmds = []

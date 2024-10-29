@@ -16,8 +16,9 @@ exports.generate = (currentConfig, interfaceConfig) => {
   }
   var config = {}
 
-  if (interfaceConfig.optional)
+  if (interfaceConfig.optional) {
     config.optional = true
+  }
 
   if (interfaceConfig.ip_address && !interfaceConfig.dhcp) {
     config.dhcp4 = false
@@ -45,6 +46,10 @@ exports.generate = (currentConfig, interfaceConfig) => {
   } else {
     config.dhcp4 = true
     config['dhcp-identifier'] = 'mac'
+  }
+
+  if (interfaceConfig.mac_address) {
+    config.match = { macaddress: interfaceConfig.mac_address }
   }
 
   if (!is_vlan) {
