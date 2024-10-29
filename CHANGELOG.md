@@ -1,3 +1,8 @@
+v1.2.4
+---
+  - Write to `/etc/udev/rules.d/70-persistent-net.rules` to keep interface names persistent
+  - Drop support for `dhcpcd` and `ifupdown`, now only supports `netplan`
+
 v1.2.3
 ---
   - Added `optional: true` to physical network interfaces included in bridge ports

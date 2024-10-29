@@ -1,12 +1,13 @@
 'use strict'
+
 var child_process = require('child_process')
-var interfaces_d = require('./interfaces.d/index.js')
-var dhcpcd = require('./dhcpcd/index.js')
 var netplan = require('./netplan/index.js')
 var { promisify } = require('util')
 
-exports.configure = async (configs) => {
+exports.NetworkManagerBackend = 'NetworkManager'
+exports.SystemdNetworkdBackend = 'networkd'
 
+exports.configure = async (configs) => {
   if (typeof configs == 'object' && !Array.isArray(configs))
     configs = [configs]
 
@@ -40,27 +41,22 @@ exports.configure = async (configs) => {
 
   var sorted = configs
     .sort((a, b) => {
-      return typeof(a.vlanid) == 'number' && typeof(b.vlanid) != 'number'
+      return typeof (a.vlanid) == 'number' && typeof (b.vlanid) != 'number'
         ? 1
         : typeof a.vlanid != 'number' && typeof b.vlanid == 'number'
-        ? -1
-        : 0
+          ? -1
+          : 0
     })
     .sort((a, b) => {
       var ret = !Array.isArray(a.bridge_ports) && Array.isArray(b.bridge_ports)
         ? -1
         : Array.isArray(a.bridge_ports) && !Array.isArray(b.bridge_ports)
-        ? 1
-        : 0
+          ? 1
+          : 0
       return ret
     })
 
-  await Promise.all([
-    dhcpcd.configure(configs),
-    interfaces_d.configure(configs),
-    netplan.configure(configs)
-  ])
-
+  await netplan.configure(configs)
 }
 
 exports.restartService = async () => {

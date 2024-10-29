@@ -1,6 +1,6 @@
 {
-  "name": "set-ip-address",
-  "version": "1.2.3",
+  "name": "@adopisoft/netplan",
+  "version": "1.2.4",
   "description": "Node module for setting up network interface(s) ip address.",
   "main": "index.js",
   "scripts": {
